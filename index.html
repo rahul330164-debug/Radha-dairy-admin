@@ -41,10 +41,10 @@
 <body class="bg-slate-50 font-sans leading-normal tracking-normal text-slate-800 selection:bg-primary selection:text-white overflow-x-hidden">
 
     <div id="loginScreen" class="screen-container min-h-screen flex-col items-center justify-center bg-slate-900 p-4 transition-all duration-500 screen-active">
-        <div class="glass-panel rounded-[2rem] w-full max-w-md p-8 relative overflow-hidden animate-fade-in-up">
+        <div class="glass-panel rounded-[2rem] w-full max-w-md p-6 relative overflow-hidden animate-fade-in-up">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500"></div>
             <div class="flex flex-col items-center justify-center mb-8 mt-2">
-                <img src="https://i.ibb.co/Ps0dQnHk/1783568195843.png" alt="Radha Dairy App Icon" class="w-28 h-28 mb-6 rounded-[2rem] shadow-xl border-4 border-white object-cover">
+                <img src="https://i.ibb.co/Ps0dQnHk/1783568195843.png" alt="Radha Dairy App Icon" class="w-24 h-24 mb-6 rounded-[2rem] shadow-xl border-4 border-white object-cover">
                 <h1 class="text-3xl text-slate-800 tracking-tight text-center leading-none mb-2 font-poppins font-black">RADHA<br><span class="text-indigo-600 text-lg tracking-[0.2em] font-bold">DAIRY</span></h1>
                 <p class="text-[11px] text-white font-bold bg-indigo-600 px-4 py-1.5 rounded-full mt-1 uppercase tracking-wider">Super Admin Portal</p>
             </div>
@@ -73,19 +73,22 @@
                         <button onclick="openAdminOrdersModal()" class="relative text-slate-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-bell text-2xl"></i><span id="adminOrderBadge" class="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-black h-5 w-5 flex items-center justify-center rounded-full hidden border-2 border-slate-900 shadow-md">0</span>
                         </button>
-                        <button onclick="logout()" class="text-rose-400 hover:text-white font-bold text-sm bg-slate-800 hover:bg-rose-500 px-4 py-2 rounded-lg transition-all flex items-center gap-2 border border-slate-700"><i class="fa-solid fa-power-off"></i> Logout</button>
+                        <button onclick="logout()" class="text-rose-400 hover:text-white font-bold text-sm bg-slate-800 hover:bg-rose-500 px-3 py-2 rounded-lg transition-all flex items-center gap-2 border border-slate-700"><i class="fa-solid fa-power-off"></i> Logout</button>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 w-full animate-fade-in-up">
-            <div class="flex flex-wrap justify-between items-center bg-white p-4 px-6 rounded-[1.5rem] shadow-sm border border-slate-200 gap-4">
-                <h2 class="text-xl font-bold text-slate-800 font-poppins">Dashboard Overview</h2>
-                <div class="flex gap-2 flex-wrap justify-end">
-                    <button onclick="openManageItemsModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-xs border border-amber-200"><i class="fa-solid fa-tags"></i> Items & Rates</button>
-                    <button onclick="openAdminApprovedOrdersModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-xs border border-slate-300"><i class="fa-solid fa-box-open"></i> Orders</button>
-                    <button onclick="showScreen('adminAddCustomerScreen')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-xs"><i class="fa-solid fa-user-plus"></i> Naya Customer</button>
+        <!-- Reduced Padding & Spacing Here -->
+        <div class="max-w-7xl mx-auto px-4 py-4 space-y-4 w-full animate-fade-in-up">
+            
+            <!-- Mobile Friendly Grid for Buttons -->
+            <div class="flex flex-col bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-200 gap-3">
+                <h2 class="text-lg font-bold text-slate-800 font-poppins">Dashboard Overview</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="openManageItemsModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-3 px-2 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-[11px] sm:text-xs border border-amber-200"><i class="fa-solid fa-tags"></i> Items & Rates</button>
+                    <button onclick="openAdminApprovedOrdersModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-2 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-[11px] sm:text-xs border border-slate-300"><i class="fa-solid fa-box-open"></i> Orders</button>
+                    <button onclick="showScreen('adminAddCustomerScreen')" class="col-span-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 mt-1 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-user-plus"></i> Naya Customer</button>
                 </div>
             </div>
 
@@ -106,19 +109,19 @@
                 </div>
             </div>
             
+            <!-- Mobile Friendly Customer Cards Layout -->
             <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                            <tr><th class="px-6 py-4 font-bold">Customer Info</th><th class="px-6 py-4 font-bold">Rozana Details</th><th class="px-6 py-4 font-bold">Status</th><th class="px-6 py-4 font-bold">Current Bill</th><th class="px-6 py-4 font-bold text-right">Actions</th></tr>
-                        </thead>
-                        <tbody id="adminCustomerTableBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                <div class="bg-slate-50 border-b border-slate-200 p-4">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Customer List</h3>
+                </div>
+                <div id="adminCustomerTableBody" class="divide-y divide-slate-100 flex flex-col">
+                    <!-- Cards will be rendered here by JS -->
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Naya Customer Screen -->
     <div id="adminAddCustomerScreen" class="screen-container min-h-screen flex-col bg-slate-50">
         <nav class="bg-white shadow-sm border-b border-slate-200 shrink-0 sticky top-0 z-30">
             <div class="max-w-xl mx-auto px-4 py-3 flex items-center gap-4">
@@ -126,24 +129,25 @@
                 <div><h3 class="text-xl font-bold text-slate-800 font-poppins leading-none">Naya Customer</h3><span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Admin Control</span></div>
             </div>
         </nav>
-        <div class="max-w-xl mx-auto px-4 py-8 w-full animate-slide-in">
-            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-200 p-6 relative overflow-hidden">
+        <div class="max-w-xl mx-auto px-4 py-6 w-full animate-slide-in">
+            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-200 p-5 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
-                <div class="space-y-5 mt-4">
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Naam</label><input type="text" id="custName" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Mobile No.</label><input type="tel" id="custMobile" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Address / Pata</label><input type="text" id="custAddress" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none" placeholder="e.g. Ward No 5, Jamui"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label><input type="text" id="custPass" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
+                <div class="space-y-4 mt-2">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Naam</label><input type="text" id="custName" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Mobile No.</label><input type="tel" id="custMobile" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Address / Pata</label><input type="text" id="custAddress" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400" placeholder="e.g. Ward No 5, Jamui"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label><input type="text" id="custPass" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Doodh (L)</label><input type="number" id="custMilk" step="0.1" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Rate (₹)</label><input type="number" id="custRate" value="60" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
+                        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Doodh (L)</label><input type="number" id="custMilk" step="0.1" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400"></div>
+                        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Rate (₹)</label><input type="number" id="custRate" value="60" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none focus:border-indigo-400"></div>
                     </div>
-                    <button onclick="addCustomer()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 mt-4 flex justify-center items-center gap-2"><i class="fa-solid fa-check-circle"></i> Save Profile</button>
+                    <button onclick="addCustomer()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 mt-2 flex justify-center items-center gap-2"><i class="fa-solid fa-check-circle"></i> Save Profile</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Manage Individual Customer Screen -->
     <div id="adminManageUserScreen" class="screen-container min-h-screen flex-col bg-slate-50">
         <nav class="bg-white shadow-sm border-b border-slate-200 shrink-0 sticky top-0 z-30">
             <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -154,12 +158,12 @@
             </div>
         </nav>
         
-        <div class="max-w-6xl mx-auto px-4 py-6 w-full animate-slide-in">
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <button onclick="openAdminPaymentModal()" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 py-4 px-2 rounded-[1.5rem] flex flex-col items-center justify-center gap-2 shadow-sm active:scale-95 transition-all">
+        <div class="max-w-6xl mx-auto px-4 py-4 w-full animate-slide-in">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button onclick="openAdminPaymentModal()" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 py-4 px-2 rounded-[1.2rem] flex flex-col items-center justify-center gap-2 shadow-sm active:scale-95 transition-all">
                     <i class="fa-solid fa-hand-holding-dollar text-2xl"></i><span class="font-bold text-sm tracking-wide">Paisa Jama</span>
                 </button>
-                <button onclick="openAdminManualEntryModal()" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 py-4 px-2 rounded-[1.5rem] flex flex-col items-center justify-center gap-2 shadow-sm active:scale-95 transition-all">
+                <button onclick="openAdminManualEntryModal()" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 py-4 px-2 rounded-[1.2rem] flex flex-col items-center justify-center gap-2 shadow-sm active:scale-95 transition-all">
                     <i class="fa-solid fa-calendar-plus text-2xl"></i><span class="font-bold text-sm tracking-wide">Manual Entry</span>
                 </button>
             </div>
@@ -170,32 +174,32 @@
                     <button onclick="switchAdminView('archive')" id="btnAdminArchive" class="flex-1 min-w-[120px] py-3 px-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 bg-transparent transition-all">Purana Hisaab</button>
                 </div>
                 
-                <div class="bg-white p-4 px-6 flex justify-between items-center border-b border-slate-100 gap-4 shrink-0 flex-wrap">
+                <div class="bg-white p-4 flex justify-between items-center border-b border-slate-100 gap-2 shrink-0 flex-wrap">
                     <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-list-check text-slate-400"></i> Records</h4>
                     
                     <div class="flex gap-2 items-center">
                         <button onclick="downloadAdminPDF()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold py-2 px-3 rounded-xl border border-rose-200 transition-all shadow-sm flex items-center gap-1">
                             <i class="fa-solid fa-file-pdf"></i> Download PDF
                         </button>
-                        <select id="adminDataFilter" onchange="renderAdminPageTable()" class="text-sm bg-slate-50 border border-slate-300 px-3 py-2 rounded-xl font-bold outline-none cursor-pointer text-slate-600 focus:border-indigo-400">
+                        <select id="adminDataFilter" onchange="renderAdminPageTable()" class="text-xs bg-slate-50 border border-slate-300 px-2 py-2 rounded-xl font-bold outline-none cursor-pointer text-slate-600 focus:border-indigo-400 max-w-[110px]">
                             <option value="all">All Records</option>
-                            <option value="milk">Only Milk (Doodh)</option>
-                            <option value="payments">Only Payments (Jama)</option>
+                            <option value="milk">Only Milk</option>
+                            <option value="payments">Only Jama</option>
                         </select>
                     </div>
                 </div>
                 
                 <div id="printableStatement">
-                    <div class="overflow-x-auto max-h-[35vh] overflow-y-auto">
+                    <div class="overflow-x-auto max-h-[40vh] overflow-y-auto">
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10 shadow-sm">
-                                <tr><th class="px-6 py-4 font-bold">Tarikh</th><th class="px-6 py-4 font-bold">Detail</th><th class="px-6 py-4 font-bold">Amount</th><th class="px-6 py-4 font-bold text-right" data-html2canvas-ignore>Action</th></tr>
+                                <tr><th class="px-4 py-3 font-bold">Tarikh</th><th class="px-4 py-3 font-bold">Detail</th><th class="px-4 py-3 font-bold">Amount</th><th class="px-4 py-3 font-bold text-right" data-html2canvas-ignore>Action</th></tr>
                             </thead>
                             <tbody id="adminEntriesTableBody" class="divide-y divide-slate-50"></tbody>
                         </table>
                     </div>
 
-                    <div class="bg-slate-100 border-t border-slate-200 p-4 px-6 flex flex-col gap-3 shrink-0">
+                    <div class="bg-slate-100 border-t border-slate-200 p-4 flex flex-col gap-3 shrink-0">
                         <div class="grid grid-cols-3 gap-2 text-center text-sm">
                             <div class="bg-white rounded-xl p-2 shadow-sm border border-slate-200"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Kul Doodh</p><p id="adminTotalMilk" class="font-black text-indigo-600">0 L</p></div>
                             <div class="bg-white rounded-xl p-2 shadow-sm border border-slate-200"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Kul Bill</p><p id="adminTotalBill" class="font-black text-rose-500">₹0</p></div>
@@ -211,21 +215,22 @@
                         </div>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 
-    <div id="manageItemsModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-[60] flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-md p-6 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
+    <!-- Modals -->
+    <div id="manageItemsModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-[60] flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-md p-6 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
             <button onclick="closeManageItemsModal()" class="absolute top-5 right-5 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-xl font-bold text-slate-800 mb-4 font-poppins"><i class="fa-solid fa-tags text-indigo-500 mr-2"></i> Items & Rates</h3>
             
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 space-y-3 shrink-0">
-                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Naya Item Jodein / Update Karein</h4>
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Naya Item Jodein</h4>
                 <div><input type="text" id="newItemName" placeholder="Item Name (e.g. Paneer)" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm outline-none"></div>
                 <div class="grid grid-cols-2 gap-3">
                     <input type="number" id="newItemRate" placeholder="Rate (₹)" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm outline-none">
-                    <input type="text" id="newItemUnit" placeholder="Unit (L, KG, Pkt)" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm outline-none">
+                    <input type="text" id="newItemUnit" placeholder="Unit (L, KG)" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm outline-none">
                 </div>
                 <button onclick="saveAdminItem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm active:scale-95 text-sm"><i class="fa-solid fa-plus"></i> Save Item</button>
             </div>
@@ -233,9 +238,9 @@
         </div>
     </div>
 
-    <div id="adminPaymentModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-sm p-8 scale-95 transition-all duration-300 shadow-2xl relative">
-            <button onclick="closeAdminPaymentModal()" class="absolute top-6 right-6 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+    <div id="adminPaymentModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-sm p-6 scale-95 transition-all duration-300 shadow-2xl relative">
+            <button onclick="closeAdminPaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-xl font-bold text-emerald-700 mb-6 font-poppins"><i class="fa-solid fa-hand-holding-dollar mr-2"></i> Paisa Jama</h3>
             <div class="space-y-4">
                 <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Mahina</label><input type="month" id="adminPaymentMonth" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
@@ -245,9 +250,9 @@
         </div>
     </div>
 
-    <div id="adminManualEntryModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-sm p-8 scale-95 transition-all duration-300 shadow-2xl relative">
-            <button onclick="closeAdminManualEntryModal()" class="absolute top-6 right-6 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+    <div id="adminManualEntryModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-sm p-6 scale-95 transition-all duration-300 shadow-2xl relative">
+            <button onclick="closeAdminManualEntryModal()" class="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-xl font-bold text-indigo-700 mb-6 font-poppins"><i class="fa-solid fa-calendar-plus mr-2"></i> Manual Entry</h3>
             <div class="space-y-4">
                 <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Tarikh (Date)</label><input type="date" id="adminManualDate" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
@@ -260,29 +265,29 @@
         </div>
     </div>
 
-    <div id="editCustomerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-md p-8 scale-95 transition-all duration-300 shadow-2xl relative">
-            <button onclick="closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+    <div id="editCustomerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-md p-6 scale-95 transition-all duration-300 shadow-2xl relative">
+            <button onclick="closeEditModal()" class="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-slate-800 mb-6">Edit Profile</h3>
             <div class="space-y-4">
                 <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Naam</label><input type="text" id="editCustName" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
                 <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Mobile No.</label><input type="tel" id="editCustMobile" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
-                <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Address / Pata</label><input type="text" id="editCustAddress" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
+                <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Address</label><input type="text" id="editCustAddress" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
                 <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Password</label><input type="text" id="editCustPass" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Doodh (L)</label><input type="number" id="editCustMilk" step="0.1" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Rate (₹)</label><input type="number" id="editCustRate" class="w-full rounded-xl border-slate-200 bg-slate-50 border p-3.5 text-sm outline-none"></div>
                 </div>
-                <button onclick="saveCustomerProfile()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 mt-5">Save Changes</button>
+                <button onclick="saveCustomerProfile()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 mt-4">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <div id="adminOrdersModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-2xl p-6 md:p-8 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <button onclick="closeAdminOrdersModal()" class="absolute top-6 right-6 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+    <div id="adminOrdersModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl p-6 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeAdminOrdersModal()" class="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-xl font-bold text-slate-800 mb-6 font-poppins"><i class="fa-solid fa-bell-concierge text-rose-500 mr-2"></i> Pending Orders</h3>
-            <div class="overflow-y-auto flex-1 rounded-xl border border-slate-100">
+            <div class="overflow-x-auto overflow-y-auto flex-1 rounded-xl border border-slate-100">
                 <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
                     <thead class="bg-slate-50 sticky top-0 border-b border-slate-100 shadow-sm z-10"><tr class="text-slate-500 text-[11px] uppercase tracking-wider"><th class="px-4 py-3 font-bold">Customer</th><th class="px-4 py-3 font-bold">Details</th><th class="px-4 py-3 font-bold">Total</th><th class="px-4 py-3 font-bold text-right">Action</th></tr></thead>
                     <tbody id="adminOrdersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -291,11 +296,11 @@
         </div>
     </div>
 
-    <div id="adminApprovedOrdersModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-[2rem] w-11/12 max-w-2xl p-6 md:p-8 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <button onclick="closeAdminApprovedOrdersModal()" class="absolute top-6 right-6 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+    <div id="adminApprovedOrdersModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-50 flex items-center justify-center opacity-0 transition-all duration-300 p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl p-6 scale-95 transition-all duration-300 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeAdminApprovedOrdersModal()" class="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-xl font-bold text-slate-800 mb-6 font-poppins"><i class="fa-solid fa-box-open text-indigo-500 mr-2"></i> Approved Orders</h3>
-            <div class="overflow-y-auto flex-1 rounded-xl border border-slate-100">
+            <div class="overflow-x-auto overflow-y-auto flex-1 rounded-xl border border-slate-100">
                 <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
                     <thead class="bg-slate-50 sticky top-0 border-b border-slate-100 shadow-sm z-10"><tr class="text-slate-500 text-[11px] uppercase tracking-wider"><th class="px-4 py-3 font-bold">Customer</th><th class="px-4 py-3 font-bold">Details</th><th class="px-4 py-3 font-bold">Total</th><th class="px-4 py-3 font-bold text-right">Action</th></tr></thead>
                     <tbody id="adminApprovedOrdersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -304,8 +309,8 @@
         </div>
     </div>
     
-    <div id="customDialog" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-[100] flex items-center justify-center transition-all duration-300 opacity-0">
-        <div id="customDialogBox" class="bg-white rounded-[2rem] shadow-2xl w-11/12 max-w-sm p-8 scale-95 transition-all duration-300 text-center flex flex-col">
+    <div id="customDialog" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-[100] flex items-center justify-center transition-all duration-300 opacity-0 p-4">
+        <div id="customDialogBox" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm p-6 scale-95 transition-all duration-300 text-center flex flex-col">
             <div id="dialogIcon" class="mb-5 flex justify-center"></div>
             <h3 id="dialogTitle" class="text-xl font-bold text-slate-800 mb-2 font-poppins">Title</h3>
             <p id="dialogMessage" class="text-slate-600 text-sm mb-6 leading-relaxed flex-1">Message</p>
@@ -445,30 +450,52 @@
         }
         async function completeAdminOrder(custId, orderId) { if(await CustomDialog.confirm("Order Complete", "Kya yeh order customer tak pahunch gaya?")) { await db.ref(`/customers/${custId}/orders/${orderId}`).update({ status: 'Completed', completeDate: getLocalToday() }); CustomDialog.alert("Done", "Order history me chala gaya."); } }
 
+        // JS CHANGE: Replaced Table Rendering with Flex Cards for Mobile Friendliness
         function renderAdminDashboard() {
             checkPendingOrders();
-            const tbody = document.getElementById('adminCustomerTableBody'); tbody.innerHTML = ''; let todaysGrandTotalMilk = 0;
+            const tbody = document.getElementById('adminCustomerTableBody'); 
+            tbody.innerHTML = ''; 
+            let todaysGrandTotalMilk = 0;
+            
             for (let key in customersData) {
                 let customer = customersData[key], status = customer.status || 'active';
                 let bal = getDetailedBalance(customer);
-                if(customer.entries) { for(let d in customer.entries) { if(d === today && !customer.entries[d].isPayment) todaysGrandTotalMilk += customer.entries[d].quantity; } }
+                if(customer.entries) { 
+                    for(let d in customer.entries) { 
+                        if(d === today && !customer.entries[d].isPayment) todaysGrandTotalMilk += customer.entries[d].quantity; 
+                    } 
+                }
                 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 border-b border-slate-100">
-                    <td class="px-6 py-4 cursor-pointer group" onclick="adminOpenCustomer('${key}')">
-                        <p class="font-bold text-slate-800 group-hover:text-indigo-600">${customer.name} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-0 group-hover:opacity-100 ml-1"></i></p>
-                        <p class="text-[11px] text-slate-400 font-bold mt-0.5"><i class="fa-solid fa-phone text-[10px]"></i> ${customer.mobile || 'N/A'}</p>
-                        <p class="text-[11px] text-slate-400 font-bold mt-0.5"><i class="fa-solid fa-location-dot text-[10px]"></i> ${customer.address || 'N/A'}</p>
-                    </td>
-                    <td class="px-6 py-4"><span class="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">${customer.dailyMilk} L</span> <span class="text-[11px] text-slate-400 ml-1 font-bold">@ ₹${customer.rate}</span></td>
-                    <td class="px-6 py-4">${status==='active'?'<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 rounded">CHALU</span>':'<span class="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 rounded">BAND</span>'}</td>
-                    <td class="px-6 py-4 font-black tracking-tight">${bal.netBalance > 0 ? `<span class="text-rose-600">₹${bal.netBalance.toFixed(2)}</span>` : `<span class="text-emerald-500">Adv: ₹${Math.abs(bal.netBalance).toFixed(2)}</span>`}</td>
-                    <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
-                        <button onclick="openEditModal('${key}')" class="text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 h-9 w-9 rounded-xl flex items-center justify-center transition-all"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteCustomer('${key}')" class="text-rose-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 h-9 w-9 rounded-xl flex items-center justify-center transition-all"><i class="fa-solid fa-trash-can"></i></button>
-                        <button onclick="adminToggleStatus('${key}', '${status === 'active' ? 'paused' : 'active'}')" class="text-xs font-bold border h-9 px-3 rounded-xl shadow-sm ${status === 'active'?'border-amber-200 text-amber-500 bg-amber-50':'border-emerald-200 text-emerald-500 bg-emerald-50'}">${status === 'active'?'Pause':'Start'}</button>
-                    </td>
-                </tr>`;
+                <div class="p-4 hover:bg-slate-50 transition-colors flex flex-col gap-3">
+                    <div class="flex justify-between items-start cursor-pointer group" onclick="adminOpenCustomer('${key}')">
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">${customer.name} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-indigo-500 ml-1"></i></p>
+                            <p class="text-[11px] text-slate-500 font-medium mt-1 flex items-center gap-1"><i class="fa-solid fa-phone text-[10px]"></i> ${customer.mobile || 'N/A'}</p>
+                            <p class="text-[11px] text-slate-500 font-medium mt-0.5 flex items-center gap-1"><i class="fa-solid fa-location-dot text-[10px]"></i> ${customer.address || 'N/A'}</p>
+                        </div>
+                        <div>
+                            ${status==='active'?'<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md shadow-sm">CHALU</span>':'<span class="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-1 rounded-md shadow-sm">BAND</span>'}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Rozana Doodh</p>
+                            <p><span class="font-bold text-slate-700">${customer.dailyMilk} L</span> <span class="text-[11px] text-slate-400 font-medium ml-1">@ ₹${customer.rate}</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Current Bill</p>
+                            <p class="font-black tracking-tight text-sm">${bal.netBalance > 0 ? `<span class="text-rose-600">₹${bal.netBalance.toFixed(2)}</span>` : `<span class="text-emerald-500">Adv: ₹${Math.abs(bal.netBalance).toFixed(2)}</span>`}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end items-center gap-2 mt-1">
+                        <button onclick="openEditModal('${key}')" class="text-slate-500 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200 h-9 w-10 rounded-xl flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteCustomer('${key}')" class="text-rose-400 hover:text-rose-600 bg-white hover:bg-rose-50 border border-slate-200 h-9 w-10 rounded-xl flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                        <button onclick="adminToggleStatus('${key}', '${status === 'active' ? 'paused' : 'active'}')" class="text-xs font-bold border h-9 px-4 rounded-xl shadow-sm transition-all ${status === 'active'?'border-amber-200 text-amber-600 bg-amber-50 hover:bg-amber-100':'border-emerald-200 text-emerald-600 bg-emerald-50 hover:bg-emerald-100'}">${status === 'active'?'Pause Karein':'Start Karein'}</button>
+                    </div>
+                </div>`;
             }
             document.getElementById('todayTotalMilkDisplay').innerHTML = `${todaysGrandTotalMilk.toFixed(1)}<span class="text-lg text-slate-400 ml-1">L</span>`;
         }
@@ -591,61 +618,59 @@
         }
 
         function renderAdminPageTable() { 
-    const tbody = document.getElementById('adminEntriesTableBody'); tbody.innerHTML = ''; 
-    const cData = customersData[adminSelectedCustId]; if (!cData) return; 
-    const target = adminShowingArchive ? cData.archives : cData.entries; 
-    const filterVal = document.getElementById('adminDataFilter').value;
-    
-    let totalMilk = 0, totalBill = 0, totalJama = 0;
-    
-    if (!target) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Koi record nahi mila.</td></tr>`;
-        updateAdminFooter(0, 0, 0);
-        return;
-    }
-
-    let displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0]));
-
-    if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0);
-    if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0);
-
-    if(displayData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Filter ke hisab se koi record nahi.</td></tr>`;
-    } else {
-        displayData.forEach(([d, e]) => { 
-            if(e.isPayment || e.total < 0) { 
-                totalJama += Math.abs(e.total); 
-            } else { 
-                totalMilk += e.quantity; totalBill += e.total; 
+            const tbody = document.getElementById('adminEntriesTableBody'); tbody.innerHTML = ''; 
+            const cData = customersData[adminSelectedCustId]; if (!cData) return; 
+            const target = adminShowingArchive ? cData.archives : cData.entries; 
+            const filterVal = document.getElementById('adminDataFilter').value;
+            
+            let totalMilk = 0, totalBill = 0, totalJama = 0;
+            
+            if (!target) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Koi record nahi mila.</td></tr>`;
+                updateAdminFooter(0, 0, 0);
+                return;
             }
 
-            // Custom UI Colors
-            let rowClass = 'border-b border-slate-50 hover:bg-slate-50';
-            let textClass = 'text-slate-700';
-            let detailText = e.quantity + ' L';
-            let detailClass = 'text-slate-600';
-            let amountClass = 'text-slate-800';
+            let displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0]));
 
-            if (e.isPayment) {
-                rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700';
-                detailText = 'Jama Kiya'; detailClass = 'text-emerald-600 text-xs font-bold uppercase'; amountClass = 'text-emerald-600';
-            } else if (e.quantity === 0) {
-                rowClass = 'bg-rose-50/50 border-b border-rose-100'; // Light red background
-                textClass = 'text-rose-700';
-                detailText = '00 L (Band)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600';
+            if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0);
+            if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0);
+
+            if(displayData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Filter ke hisab se koi record nahi.</td></tr>`;
+            } else {
+                displayData.forEach(([d, e]) => { 
+                    if(e.isPayment || e.total < 0) { 
+                        totalJama += Math.abs(e.total); 
+                    } else { 
+                        totalMilk += e.quantity; totalBill += e.total; 
+                    }
+
+                    let rowClass = 'border-b border-slate-50 hover:bg-slate-50';
+                    let textClass = 'text-slate-700';
+                    let detailText = e.quantity + ' L';
+                    let detailClass = 'text-slate-600';
+                    let amountClass = 'text-slate-800';
+
+                    if (e.isPayment) {
+                        rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700';
+                        detailText = 'Jama Kiya'; detailClass = 'text-emerald-600 text-xs font-bold uppercase'; amountClass = 'text-emerald-600';
+                    } else if (e.quantity === 0) {
+                        rowClass = 'bg-rose-50/50 border-b border-rose-100'; 
+                        textClass = 'text-rose-700';
+                        detailText = '00 L (Band)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600';
+                    }
+
+                    tbody.innerHTML += `<tr class="${rowClass}">
+                        <td class="px-4 py-4 font-medium ${textClass}">${e.isPayment ? e.displayDate : d}</td>
+                        <td class="px-4 py-4 ${detailClass}">${detailText}</td>
+                        <td class="px-4 py-4 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td>
+                        <td class="px-4 py-4 text-right" data-html2canvas-ignore><button onclick="adminDelEntry('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 bg-rose-50 h-8 w-8 rounded-lg flex items-center justify-center ml-auto transition-all"><i class="fa-solid fa-trash-can"></i></button></td>
+                    </tr>`; 
+                }); 
             }
-
-            tbody.innerHTML += `<tr class="${rowClass}">
-                <td class="px-6 py-4 font-medium ${textClass}">${e.isPayment ? e.displayDate : d}</td>
-                <td class="px-6 py-4 ${detailClass}">${detailText}</td>
-                <td class="px-6 py-4 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td>
-                <td class="px-6 py-4 text-right" data-html2canvas-ignore><button onclick="adminDelEntry('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 bg-rose-50 h-8 w-8 rounded-lg flex items-center justify-center ml-auto transition-all"><i class="fa-solid fa-trash-can"></i></button></td>
-            </tr>`; 
-        }); 
-    }
-    updateAdminFooter(totalMilk, totalBill, totalJama);
-}
-
+            updateAdminFooter(totalMilk, totalBill, totalJama);
+        }
 
         function updateAdminFooter(milk, bill, jama) {
             document.getElementById('adminTotalMilk').innerText = `${milk.toFixed(1)} L`;
@@ -671,176 +696,169 @@
             }
         }
 
-        // --- NEW PDF DOWNLOAD FUNCTION ---
-        // --- NEW PROFESSIONAL PDF DOWNLOAD FUNCTION ---
-// --- NEW PROFESSIONAL PDF DOWNLOAD FUNCTION (WITH PAGE-BREAK FIX) ---
-function downloadAdminPDF() {
-    if(!adminSelectedCustId) return;
-    const c = customersData[adminSelectedCustId];
-    if(!c) return;
+        function downloadAdminPDF() {
+            if(!adminSelectedCustId) return;
+            const c = customersData[adminSelectedCustId];
+            if(!c) return;
 
-    let totalMilk = 0, totalBill = 0, totalJama = 0;
-    const target = adminShowingArchive ? c.archives : c.entries;
-    let displayData = [];
-    
-    if (target) {
-        displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0]));
-        const filterVal = document.getElementById('adminDataFilter').value;
-        
-        if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0);
-        if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0);
-
-        Object.values(target).forEach(e => {
-            if(e.isPayment || e.total < 0) totalJama += Math.abs(e.total);
-            else { totalMilk += e.quantity; totalBill += e.total; }
-        });
-    }
-    
-    let finalAmount = totalBill - totalJama;
-
-    const upiId = "9508231565-5@ybl"; 
-    const upiUrl = `upi://pay?pa=${upiId}&pn=Radha%20Dairy&am=${finalAmount > 0 ? finalAmount.toFixed(2) : 0}&cu=INR`;
-    const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiUrl)}`;
-
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.padding = '20px';
-    pdfContainer.style.fontFamily = "'Inter', sans-serif";
-    pdfContainer.style.color = '#1e293b';
-    pdfContainer.style.backgroundColor = '#ffffff';
-
-    const headerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="https://i.ibb.co/Ps0dQnHk/1783568195843.png" style="width: 75px; height: 75px; border-radius: 12px; border: 2px solid #4338ca; object-fit: cover;">
-                <div>
-                    <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #4338ca; letter-spacing: 1px;">RADHA DAIRY</h1>
-                    <p style="margin: 5px 0 0; font-size: 13px; font-weight: 600; color: #475569;">Satgama, Jamui, Bihar</p>
-                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">📞 +91 9508231565 | ✉️ radhadairyy@gmail.com</p>
-                </div>
-            </div>
-            <div style="text-align: right;">
-                <h2 style="margin: 0; font-size: 20px; color: #0f172a; text-transform: uppercase; font-weight: 800;">Statement</h2>
-                <p style="margin: 5px 0 0; font-size: 12px; font-weight: bold; color: #64748b;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
-            </div>
-        </div>
-    `;
-
-    const customerHTML = `
-        <div style="background-color: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-            <h3 style="margin: 0 0 10px; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Billed To:</h3>
-            <div style="display: flex; justify-content: space-between;">
-                <div>
-                    <p style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: #0f172a;">${c.name}</p>
-                    <p style="margin: 0; font-size: 13px; color: #475569; font-weight: 500;">📱 ${c.mobile || 'Not Provided'}</p>
-                </div>
-                <div style="text-align: right;">
-                    <p style="margin: 0 0 4px; font-size: 13px; color: #475569; font-weight: 500;">📍 ${c.address || 'Not Provided'}</p>
-                    <p style="margin: 0; font-size: 13px; color: #4338ca; font-weight: bold;">Rate: ₹${c.rate} / L</p>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Added Logic for Red Color when Quantity is 0
-    let tbodyHTML = '';
-    if(displayData.length === 0) {
-        tbodyHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-weight: 500;">Koi record nahi mila.</td></tr>`;
-    } else {
-        displayData.forEach(([d, e]) => {
-            let bgColor = '#ffffff'; let dateColor = '#334155'; let detailColor = '#475569'; let amountColor = '#0f172a';
-            let detailText = e.quantity + ' Liter'; let detailWeight = '600';
+            let totalMilk = 0, totalBill = 0, totalJama = 0;
+            const target = adminShowingArchive ? c.archives : c.entries;
+            let displayData = [];
             
-            if (e.isPayment) {
-                bgColor = '#f0fdf4'; dateColor = '#15803d'; detailColor = '#16a34a'; amountColor = '#16a34a'; detailText = 'Paisa Jama Kiya'; detailWeight = '800';
-            } else if (e.quantity === 0) {
-                bgColor = '#fef2f2'; dateColor = '#ef4444'; detailColor = '#ef4444'; amountColor = '#ef4444'; detailText = '00 L (Band)'; detailWeight = '800';
+            if (target) {
+                displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0]));
+                const filterVal = document.getElementById('adminDataFilter').value;
+                
+                if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0);
+                if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0);
+
+                Object.values(target).forEach(e => {
+                    if(e.isPayment || e.total < 0) totalJama += Math.abs(e.total);
+                    else { totalMilk += e.quantity; totalBill += e.total; }
+                });
+            }
+            
+            let finalAmount = totalBill - totalJama;
+
+            const upiId = "9508231565-5@ybl"; 
+            const upiUrl = `upi://pay?pa=${upiId}&pn=Radha%20Dairy&am=${finalAmount > 0 ? finalAmount.toFixed(2) : 0}&cu=INR`;
+            const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiUrl)}`;
+
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.padding = '20px';
+            pdfContainer.style.fontFamily = "'Inter', sans-serif";
+            pdfContainer.style.color = '#1e293b';
+            pdfContainer.style.backgroundColor = '#ffffff';
+
+            const headerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="https://i.ibb.co/Ps0dQnHk/1783568195843.png" style="width: 75px; height: 75px; border-radius: 12px; border: 2px solid #4338ca; object-fit: cover;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #4338ca; letter-spacing: 1px;">RADHA DAIRY</h1>
+                            <p style="margin: 5px 0 0; font-size: 13px; font-weight: 600; color: #475569;">Satgama, Jamui, Bihar</p>
+                            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">📞 +91 9508231565 | ✉️ radhadairyy@gmail.com</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <h2 style="margin: 0; font-size: 20px; color: #0f172a; text-transform: uppercase; font-weight: 800;">Statement</h2>
+                        <p style="margin: 5px 0 0; font-size: 12px; font-weight: bold; color: #64748b;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+                    </div>
+                </div>
+            `;
+
+            const customerHTML = `
+                <div style="background-color: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0 0 10px; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Billed To:</h3>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <p style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: #0f172a;">${c.name}</p>
+                            <p style="margin: 0; font-size: 13px; color: #475569; font-weight: 500;">📱 ${c.mobile || 'Not Provided'}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0 0 4px; font-size: 13px; color: #475569; font-weight: 500;">📍 ${c.address || 'Not Provided'}</p>
+                            <p style="margin: 0; font-size: 13px; color: #4338ca; font-weight: bold;">Rate: ₹${c.rate} / L</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let tbodyHTML = '';
+            if(displayData.length === 0) {
+                tbodyHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-weight: 500;">Koi record nahi mila.</td></tr>`;
+            } else {
+                displayData.forEach(([d, e]) => {
+                    let bgColor = '#ffffff'; let dateColor = '#334155'; let detailColor = '#475569'; let amountColor = '#0f172a';
+                    let detailText = e.quantity + ' Liter'; let detailWeight = '600';
+                    
+                    if (e.isPayment) {
+                        bgColor = '#f0fdf4'; dateColor = '#15803d'; detailColor = '#16a34a'; amountColor = '#16a34a'; detailText = 'Paisa Jama Kiya'; detailWeight = '800';
+                    } else if (e.quantity === 0) {
+                        bgColor = '#fef2f2'; dateColor = '#ef4444'; detailColor = '#ef4444'; amountColor = '#ef4444'; detailText = '00 L (Band)'; detailWeight = '800';
+                    }
+
+                    tbodyHTML += `
+                    <tr style="border-bottom: 1px solid #f1f5f9; background-color: ${bgColor}; page-break-inside: avoid;">
+                        <td style="padding: 10px 15px; color: ${dateColor}; font-size: 12px; font-weight: 500;">${e.isPayment ? e.displayDate : d}</td>
+                        <td style="padding: 10px 15px; color: ${detailColor}; font-size: 12px; font-weight: ${detailWeight}; text-transform: ${e.isPayment ? 'uppercase' : 'none'};">${detailText}</td>
+                        <td style="padding: 10px 15px; color: ${amountColor}; font-size: 13px; font-weight: 800; text-align: right;">₹${Math.abs(e.total).toFixed(2)}</td>
+                    </tr>`;
+                });
             }
 
-            tbodyHTML += `
-            <tr style="border-bottom: 1px solid #f1f5f9; background-color: ${bgColor}; page-break-inside: avoid;">
-                <td style="padding: 10px 15px; color: ${dateColor}; font-size: 12px; font-weight: 500;">${e.isPayment ? e.displayDate : d}</td>
-                <td style="padding: 10px 15px; color: ${detailColor}; font-size: 12px; font-weight: ${detailWeight}; text-transform: ${e.isPayment ? 'uppercase' : 'none'};">${detailText}</td>
-                <td style="padding: 10px 15px; color: ${amountColor}; font-size: 13px; font-weight: 800; text-align: right;">₹${Math.abs(e.total).toFixed(2)}</td>
-            </tr>`;
-        });
-    }
+            const tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                            <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">Date</th>
+                            <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">Details</th>
+                            <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; text-align: right; font-weight: 800;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tbodyHTML}</tbody>
+                </table>
+            `;
 
-    const tableHTML = `
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-            <thead>
-                <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
-                    <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">Date</th>
-                    <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">Details</th>
-                    <th style="padding: 12px 15px; font-size: 12px; color: #64748b; text-transform: uppercase; text-align: right; font-weight: 800;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>${tbodyHTML}</tbody>
-        </table>
-    `;
-
-    const totalsHTML = `
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; page-break-inside: avoid;">
-            <div style="width: 300px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Milk:</span>
-                    <span style="font-size: 13px; font-weight: 800; color: #4338ca;">${totalMilk.toFixed(1)} L</span>
+            const totalsHTML = `
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; page-break-inside: avoid;">
+                    <div style="width: 300px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Milk:</span>
+                            <span style="font-size: 13px; font-weight: 800; color: #4338ca;">${totalMilk.toFixed(1)} L</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Bill:</span>
+                            <span style="font-size: 13px; font-weight: 800; color: #ef4444;">₹${totalBill.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">
+                            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Paid:</span>
+                            <span style="font-size: 13px; font-weight: 800; color: #10b981;">₹${totalJama.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 14px; font-weight: 800; color: #0f172a;">${finalAmount > 0 ? 'Total Due:' : finalAmount < 0 ? 'Advance:' : 'Clear:'}</span>
+                            <span style="font-size: 18px; font-weight: 900; color: ${finalAmount > 0 ? '#ef4444' : finalAmount < 0 ? '#10b981' : '#0f172a'};">
+                                ₹${Math.abs(finalAmount).toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Bill:</span>
-                    <span style="font-size: 13px; font-weight: 800; color: #ef4444;">₹${totalBill.toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">
-                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total Paid:</span>
-                    <span style="font-size: 13px; font-weight: 800; color: #10b981;">₹${totalJama.toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 14px; font-weight: 800; color: #0f172a;">${finalAmount > 0 ? 'Total Due:' : finalAmount < 0 ? 'Advance:' : 'Clear:'}</span>
-                    <span style="font-size: 18px; font-weight: 900; color: ${finalAmount > 0 ? '#ef4444' : finalAmount < 0 ? '#10b981' : '#0f172a'};">
-                        ₹${Math.abs(finalAmount).toFixed(2)}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `;
+            `;
 
-    let paymentHTML = '';
-    if (finalAmount > 0) {
-        paymentHTML = `
-            <div style="margin-top: 20px; padding: 20px; border: 2px dashed #cbd5e1; background-color: #f8fafc; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
-                <div>
-                    <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: 800; color: #0f172a;">Pay Online via UPI</h3>
-                    <p style="margin: 0 0 8px; font-size: 13px; color: #64748b; font-weight: 500;">Scan this QR code from PhonePe, Google Pay, or Paytm.</p>
-                    <p style="margin: 0; font-size: 16px; font-weight: 900; color: #4338ca;">Amount to Pay: ₹${finalAmount.toFixed(2)}</p>
-                </div>
-                <img src="${qrCodeApiUrl}" alt="UPI QR Code" style="width: 100px; height: 100px; border: 3px solid #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px;">
-            </div>
-        `;
-    } else {
-         paymentHTML = `
-            <div style="margin-top: 20px; padding: 15px; text-align: center; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #059669; font-weight: 800; font-size: 15px; page-break-inside: avoid;">
-                <i class="fa-solid fa-circle-check"></i> Hisaab ekdam clear hai. Thank you!
-            </div>
-         `;
-    }
+            let paymentHTML = '';
+            if (finalAmount > 0) {
+                paymentHTML = `
+                    <div style="margin-top: 20px; padding: 20px; border: 2px dashed #cbd5e1; background-color: #f8fafc; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
+                        <div>
+                            <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: 800; color: #0f172a;">Pay Online via UPI</h3>
+                            <p style="margin: 0 0 8px; font-size: 13px; color: #64748b; font-weight: 500;">Scan this QR code from PhonePe, Google Pay, or Paytm.</p>
+                            <p style="margin: 0; font-size: 16px; font-weight: 900; color: #4338ca;">Amount to Pay: ₹${finalAmount.toFixed(2)}</p>
+                        </div>
+                        <img src="${qrCodeApiUrl}" alt="UPI QR Code" style="width: 100px; height: 100px; border: 3px solid #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+                    </div>
+                `;
+            } else {
+                 paymentHTML = `
+                    <div style="margin-top: 20px; padding: 15px; text-align: center; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #059669; font-weight: 800; font-size: 15px; page-break-inside: avoid;">
+                        <i class="fa-solid fa-circle-check"></i> Hisaab ekdam clear hai. Thank you!
+                    </div>
+                 `;
+            }
 
-    pdfContainer.innerHTML = headerHTML + customerHTML + tableHTML + totalsHTML + paymentHTML;
+            pdfContainer.innerHTML = headerHTML + customerHTML + tableHTML + totalsHTML + paymentHTML;
 
-    let filename = `RadhaDairy_Statement_${c.name.replace(/\s+/g, '_')}.pdf`;
-    
-    html2pdf().set({
-        margin:       10,
-        filename:     filename,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    }).from(pdfContainer).save().then(() => {
-        CustomDialog.alert("Download Complete", "Professional PDF Statement download ho gaya hai.");
-    });
-}
-
-
-
+            let filename = `RadhaDairy_Statement_${c.name.replace(/\s+/g, '_')}.pdf`;
+            
+            html2pdf().set({
+                margin:       10,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            }).from(pdfContainer).save().then(() => {
+                CustomDialog.alert("Download Complete", "Professional PDF Statement download ho gaya hai.");
+            });
+        }
 
         function openAdminPaymentModal() { const m = document.getElementById('adminPaymentModal'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); }
         function closeAdminPaymentModal() { const m = document.getElementById('adminPaymentModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
@@ -856,21 +874,19 @@ function downloadAdminPDF() {
         function openAdminManualEntryModal() { const m = document.getElementById('adminManualEntryModal'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); }
         function closeAdminManualEntryModal() { const m = document.getElementById('adminManualEntryModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
         async function adminSaveManualEntry() { 
-    const d = document.getElementById('adminManualDate').value;
-    const q = parseFloat(document.getElementById('adminManualMilk').value);
-    const r = parseFloat(document.getElementById('adminManualRate').value); 
-    
-    // Yahan q aur r ko isNaN se check kiya gaya hai taaki 0 allow ho sake
-    if(d && !isNaN(q) && !isNaN(r)) { 
-        await db.ref(`/customers/${adminSelectedCustId}/${adminShowingArchive?'archives':'entries'}/${d}`).set({ quantity: q, rate: r, total: q * r }); 
-        CustomDialog.alert("Success", "Update ho gaya."); 
-        document.getElementById('adminManualMilk').value = ''; 
-        closeAdminManualEntryModal();
-    } else { 
-        CustomDialog.alert("Error", "Saari fields bharein (0 bhi daal sakte hain)."); 
-    }
-}
-
+            const d = document.getElementById('adminManualDate').value;
+            const q = parseFloat(document.getElementById('adminManualMilk').value);
+            const r = parseFloat(document.getElementById('adminManualRate').value); 
+            
+            if(d && !isNaN(q) && !isNaN(r)) { 
+                await db.ref(`/customers/${adminSelectedCustId}/${adminShowingArchive?'archives':'entries'}/${d}`).set({ quantity: q, rate: r, total: q * r }); 
+                CustomDialog.alert("Success", "Update ho gaya."); 
+                document.getElementById('adminManualMilk').value = ''; 
+                closeAdminManualEntryModal();
+            } else { 
+                CustomDialog.alert("Error", "Saari fields bharein (0 bhi daal sakte hain)."); 
+            }
+        }
 
         async function adminDelEntry(id, d) { if(await CustomDialog.confirm("Delete Entry", "Kya aap sach me is entry ko delete karna chahte hain?")) await db.ref(`/customers/${id}/${adminShowingArchive?'archives':'entries'}/${d}`).remove(); }
 
