@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -337,6 +338,180 @@
             return `${prefix}${timestamp}${randomNum}`;
         }
 
+        function getEntryMonth(dateKey, entryObj) {
+            if (entryObj && entryObj.isPayment && entryObj.forMonth) {
+                return entryObj.forMonth;
+            }
+            return String(dateKey).substring(0, 7);
+        }
+
+        function getTargetYearMonth(c, selectedMonthStr) {
+            const currentYear = new Date().getFullYear();
+            const defaultPrefix = `${currentYear}-${selectedMonthStr}`;
+            if (!c) return defaultPrefix;
+            let matchedMonths = new Set();
+            const scan = (records) => {
+                if (!records) return;
+                for (let k in records) {
+                    let m = getEntryMonth(k, records[k]);
+                    if (m && m.endsWith(`-${selectedMonthStr}`)) matchedMonths.add(m);
+                }
+            };
+            scan(c.entries);
+            scan(c.archives);
+            if (matchedMonths.has(defaultPrefix)) return defaultPrefix;
+            if (matchedMonths.size > 0) {
+                return Array.from(matchedMonths).sort().pop();
+            }
+            return defaultPrefix;
+        }
+
+        function getPaymentDateKeyPrefix(forMonthVal) {
+            if (!forMonthVal || forMonthVal === today.substring(0, 7)) return today;
+            const parts = forMonthVal.split('-');
+            if (parts.length === 2) {
+                const y = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                if (!isNaN(y) && !isNaN(m)) {
+                    const lastDay = new Date(y, m, 0).getDate();
+                    return `${forMonthVal}-${String(lastDay).padStart(2, '0')}`;
+                }
+            }
+            return `${forMonthVal}-28`;
+        }
+
+        function getTargetNodeForMonth(c, forMonthVal) {
+            if (!c) return 'entries';
+            let hasMilkInEntries = false;
+            if (c.entries) {
+                for (let key in c.entries) {
+                    let e = c.entries[key];
+                    if (!e.isPayment && getEntryMonth(key, e) === forMonthVal) {
+                        hasMilkInEntries = true;
+                        break;
+                    }
+                }
+            }
+            if (hasMilkInEntries) return 'entries';
+            if (c.archives) {
+                for (let key in c.archives) {
+                    if (getEntryMonth(key, c.archives[key]) === forMonthVal) {
+                        return 'archives';
+                    }
+                }
+            }
+            return adminShowingArchive ? 'archives' : 'entries';
+        }
+
+        async function recordPaymentForCustomer(custId, amt, primaryMonthVal, txnId) {
+            const c = customersData[custId];
+            if (!c || !(amt > 0)) return 'entries';
+            // Calculate month-wise unpaid bills so payment clears the selected month first, and any excess clears other unpaid months
+            let monthStats = {};
+            const collectStats = (records) => {
+                if (!records) return;
+                for (let k in records) {
+                    let e = records[k];
+                    let m = getEntryMonth(k, e);
+                    if (!monthStats[m]) monthStats[m] = { bill: 0, paid: 0 };
+                    if (e.isPayment || e.total < 0) monthStats[m].paid += Math.abs(e.total);
+                    else monthStats[m].bill += (e.total || 0);
+                }
+            };
+            collectStats(c.entries);
+            collectStats(c.archives);
+
+            let remainingAmt = Number(amt.toFixed(2));
+            let allocations = [];
+
+            let primaryStat = monthStats[primaryMonthVal] || { bill: 0, paid: 0 };
+            let primaryDue = Math.max(0, Number((primaryStat.bill - primaryStat.paid).toFixed(2)));
+
+            if (primaryDue > 0) {
+                let alloc = Math.min(remainingAmt, primaryDue);
+                allocations.push({ month: primaryMonthVal, amount: Number(alloc.toFixed(2)) });
+                remainingAmt = Number((remainingAmt - alloc).toFixed(2));
+                primaryStat.paid += alloc;
+            }
+
+            if (remainingAmt > 0) {
+                let sortedMonths = Object.keys(monthStats).sort();
+                for (let m of sortedMonths) {
+                    if (m === primaryMonthVal) continue;
+                    let due = Math.max(0, Number((monthStats[m].bill - monthStats[m].paid).toFixed(2)));
+                    if (due > 0 && remainingAmt > 0) {
+                        let alloc = Math.min(remainingAmt, due);
+                        allocations.push({ month: m, amount: Number(alloc.toFixed(2)) });
+                        remainingAmt = Number((remainingAmt - alloc).toFixed(2));
+                    }
+                }
+            }
+
+            if (remainingAmt > 0) {
+                let existingPrimary = allocations.find(a => a.month === primaryMonthVal);
+                if (existingPrimary) {
+                    existingPrimary.amount = Number((existingPrimary.amount + remainingAmt).toFixed(2));
+                } else {
+                    allocations.push({ month: primaryMonthVal, amount: Number(remainingAmt.toFixed(2)) });
+                }
+            }
+
+            let updates = {};
+            let baseTs = new Date().getTime();
+            let primaryTargetNode = getTargetNodeForMonth(c, primaryMonthVal);
+
+            allocations.forEach((item, idx) => {
+                let node = getTargetNodeForMonth(c, item.month);
+                let keyPrefix = getPaymentDateKeyPrefix(item.month);
+                let entryKey = `${keyPrefix}_PAYMENT_${baseTs + idx}`;
+                updates[`/customers/${custId}/${node}/${entryKey}`] = {
+                    quantity: 0,
+                    rate: 0,
+                    total: item.amount,
+                    isPayment: true,
+                    displayDate: today,
+                    forMonth: item.month,
+                    transactionId: txnId
+                };
+            });
+
+            await db.ref().update(updates);
+            return primaryTargetNode;
+        }
+
+        function syncStrandedArchivePayments(allCustomers) {
+            if (!allCustomers) return;
+            let updates = {};
+            let hasUpdates = false;
+            for (let custId in allCustomers) {
+                let c = allCustomers[custId];
+                if (!c || !c.entries || !c.archives) continue;
+                let archivedMilkMonths = new Set();
+                let currentMilkMonths = new Set();
+                for (let k in c.archives) {
+                    let e = c.archives[k];
+                    if (!e.isPayment) archivedMilkMonths.add(getEntryMonth(k, e));
+                }
+                for (let k in c.entries) {
+                    let e = c.entries[k];
+                    if (!e.isPayment) currentMilkMonths.add(getEntryMonth(k, e));
+                }
+                for (let k in c.entries) {
+                    let e = c.entries[k];
+                    if (e && e.isPayment && e.forMonth) {
+                        if (archivedMilkMonths.has(e.forMonth) && !currentMilkMonths.has(e.forMonth)) {
+                            updates[`/customers/${custId}/archives/${k}`] = e;
+                            updates[`/customers/${custId}/entries/${k}`] = null;
+                            hasUpdates = true;
+                        }
+                    }
+                }
+            }
+            if (hasUpdates) {
+                db.ref().update(updates);
+            }
+        }
+
         function fetchExistingEntryForDate() {
             const selectedDate = document.getElementById('adminManualDate').value;
             if (!selectedDate || !adminSelectedCustId) return;
@@ -401,7 +576,7 @@
                 if(snap.exists()) { pdfAlertConfig = snap.val(); }
             });
 
-            db.ref('customers').on('value', (snapshot) => { customersData = snapshot.val() || {}; if(currentRole === 'admin') { renderAdminDashboard(); if(adminSelectedCustId && document.getElementById('adminManageUserScreen').classList.contains('screen-active')) { renderAdminPageTable(); if(document.getElementById('monthDetailModal') && !document.getElementById('monthDetailModal').classList.contains('hidden')) { renderMonthDetailModal(); } } } if(document.getElementById('kharchaScreen').classList.contains('screen-active')) renderKharchaList(); });
+            db.ref('customers').on('value', (snapshot) => { customersData = snapshot.val() || {}; syncStrandedArchivePayments(customersData); if(currentRole === 'admin') { renderAdminDashboard(); if(adminSelectedCustId && document.getElementById('adminManageUserScreen').classList.contains('screen-active')) { renderAdminPageTable(); if(document.getElementById('monthDetailModal') && !document.getElementById('monthDetailModal').classList.contains('hidden')) { renderMonthDetailModal(); } } } if(document.getElementById('kharchaScreen').classList.contains('screen-active')) renderKharchaList(); });
             db.ref('expenses').on('value', snap => { expensesData = snap.val() || {}; if(document.getElementById('kharchaScreen').classList.contains('screen-active')) renderKharchaList(); });
         }
         function getDetailedBalance(customer) { let prevMilkCost = 0, prevPaid = 0, currMilkCost = 0, currPaid = 0; if(customer.archives) { Object.values(customer.archives).forEach(e => { if (e.isPayment || e.total < 0) prevPaid += Math.abs(e.total); else prevMilkCost += e.total; }); } if(customer.entries) { Object.values(customer.entries).forEach(e => { if (e.isPayment || e.total < 0) currPaid += Math.abs(e.total); else { currMilkCost += e.total; } }); } return { netBalance: (prevMilkCost + currMilkCost) - (prevPaid + currPaid) }; }
@@ -429,17 +604,17 @@
 
         function switchAdminView(view) { adminShowingArchive = (view === 'archive'); const baseClass = "flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all "; document.getElementById('btnAdminCurrent').className = view === 'current' ? baseClass + "bg-white text-blue-600 shadow-sm border border-slate-100 min-w-[120px]" : baseClass + "text-slate-500 hover:text-slate-800 bg-transparent min-w-[120px]"; document.getElementById('btnAdminArchive').className = view === 'archive' ? baseClass + "bg-white text-blue-600 shadow-sm border border-slate-100 min-w-[120px]" : baseClass + "text-slate-500 hover:text-slate-800 bg-transparent min-w-[120px]"; renderAdminPageTable(); }
         async function autoFillDailyEntries() { if (!await CustomDialog.confirm("Auto Entry", `Add today's milk for all?`)) return; let updates = {}, count = 0; for (let key in customersData) { let c = customersData[key]; let status = c.status || 'active'; if (status === 'active') { updates[`/customers/${key}/entries/${today}`] = { quantity: c.dailyMilk, rate: c.rate, total: c.dailyMilk * c.rate }; } else { updates[`/customers/${key}/entries/${today}`] = { quantity: 0, rate: c.rate, total: 0 }; } count++; } if(count > 0) db.ref().update(updates).then(() => CustomDialog.alert("Success", `${count} entries done.`)); }
-        async function closeMonth() { let d = new Date(), lastM = new Date(d.getFullYear(), d.getMonth(), 0); let selDate = await CustomDialog.datePrompt("Archive", "Archive old data up to this date:", `${lastM.getFullYear()}-${String(lastM.getMonth()+1).padStart(2,'0')}-${String(lastM.getDate()).padStart(2,'0')}`); if (!selDate) return; let updates = {}, count = 0; for (let key in customersData) { let ent = customersData[key].entries; if(ent) { for(let dK in ent) { if(dK <= selDate) { updates[`/customers/${key}/archives/${dK}`] = ent[dK]; updates[`/customers/${key}/entries/${dK}`] = null; count++; } } } } if(count > 0) db.ref().update(updates).then(() => CustomDialog.alert("Success", "Archive done.")); else CustomDialog.alert("Info", "No old data."); }
+        async function closeMonth() { let d = new Date(), lastM = new Date(d.getFullYear(), d.getMonth(), 0); let selDate = await CustomDialog.datePrompt("Archive", "Archive old data up to this date:", `${lastM.getFullYear()}-${String(lastM.getMonth()+1).padStart(2,'0')}-${String(lastM.getDate()).padStart(2,'0')}`); if (!selDate) return; let selMonth = selDate.substring(0, 7); let updates = {}, count = 0; for (let key in customersData) { let ent = customersData[key].entries; if(ent) { for(let dK in ent) { let e = ent[dK]; let datePart = dK.substring(0, 10); let shouldArchive = (e && e.isPayment && e.forMonth) ? (e.forMonth <= selMonth) : (datePart <= selDate); if(shouldArchive) { updates[`/customers/${key}/archives/${dK}`] = ent[dK]; updates[`/customers/${key}/entries/${dK}`] = null; count++; } } } } if(count > 0) db.ref().update(updates).then(() => CustomDialog.alert("Success", "Archive done.")); else CustomDialog.alert("Info", "No old data."); }
         
         function adminOpenCustomer(id) { adminSelectedCustId = id; document.getElementById('adminPageCustomerName').innerText = customersData[id].name; document.getElementById('adminDataFilter').value = 'all'; switchAdminView('current'); showScreen('adminManageUserScreen'); }
-        function renderAdminPageTable() { let tbody = document.getElementById('adminEntriesTableBody'); let container = tbody ? tbody.closest('.overflow-x-auto') : document.getElementById('adminDataContainerWrapper'); if (!container) return; const cData = customersData[adminSelectedCustId]; if (!cData) return; const target = adminShowingArchive ? cData.archives : cData.entries; const filterVal = document.getElementById('adminDataFilter').value; let totalMilk = 0, totalBill = 0, totalJama = 0; if (!target) { container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50"><tr><td colspan="4" class="text-center py-6 text-slate-400">No records found.</td></tr></tbody></table>`; updateAdminFooter(0, 0, 0); return; } let displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0])); if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0); if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0); if(displayData.length === 0) { container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50"><tr><td colspan="4" class="text-center py-6 text-slate-400">No records.</td></tr></tbody></table>`; updateAdminFooter(0, 0, 0); return; } displayData.forEach(([d, e]) => { if(e.isPayment || e.total < 0) { totalJama += Math.abs(e.total); } else { totalMilk += e.quantity || 0; totalBill += e.total; } }); if(adminShowingArchive) { let grouped = {}; displayData.forEach(([d, e]) => { let monthKey = d.substring(0, 7); if(!grouped[monthKey]) grouped[monthKey] = []; grouped[monthKey].push([d, e]); }); let cardsHTML = `<div class="p-4 grid grid-cols-1 gap-4 w-full" id="adminEntriesTableBody">`; for(let month in grouped) { let mMilk = 0, mBill = 0, mJama = 0; let monthDate = new Date(month + "-01"); let monthName = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }); grouped[month].forEach(([d, e]) => { if(e.isPayment || e.total < 0) mJama += Math.abs(e.total); else { mMilk += e.quantity || 0; mBill += e.total; } }); let netBal = mBill - mJama; let balText = ""; let balClass = ""; if(netBal > 0) { balText = `Due: ₹${netBal.toFixed(2)}`; balClass = "text-rose-500 bg-rose-50 border border-rose-100"; } else if(netBal < 0) { balText = `Adv: ₹${Math.abs(netBal).toFixed(2)}`; balClass = "text-emerald-500 bg-emerald-50 border border-emerald-100"; } else { balText = `Cleared`; balClass = "text-slate-500 bg-slate-50 border border-slate-100"; } cardsHTML += `<div onclick="openMonthDetailModal('${month}')" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 cursor-pointer active:scale-[0.98] transition-all flex justify-between items-center hover:border-blue-300 hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-sm"><i class="fa-regular fa-calendar-days"></i></div><div><h4 class="font-bold text-slate-800 text-[15px] tracking-wide mb-0.5">${monthName}</h4><p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">${Number(mMilk.toFixed(2))} L Total Milk</p></div></div><div class="flex items-center gap-3"><span class="inline-block px-3 py-1.5 rounded-lg text-xs font-black tracking-wide ${balClass}">${balText}</span><div class="text-slate-300 bg-slate-50 w-6 h-6 rounded-full flex items-center justify-center"><i class="fa-solid fa-chevron-right text-[10px]"></i></div></div></div>`; } cardsHTML += `</div>`; container.innerHTML = cardsHTML; } else { let tbodyHtml = ''; displayData.forEach(([d, e]) => { let rowClass = 'hover:bg-slate-50'; let textClass = 'text-slate-700'; let detailText = Number((e.quantity || 0).toFixed(2)) + ' L'; let detailClass = 'text-slate-600'; let amountClass = 'text-slate-800'; if (e.isPayment) { rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700'; detailText = 'Payment Received'; detailClass = 'text-emerald-600 font-bold'; amountClass = 'text-emerald-600'; } else if (e.isOrder) { rowClass = 'hover:bg-slate-50'; detailText = e.itemDetail || 'Order'; detailClass = 'text-blue-600 font-bold'; amountClass = 'text-slate-800'; } else if (e.quantity === 0) { rowClass = 'bg-rose-50/50'; textClass = 'text-rose-700'; detailText = '0 L (Paused)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600'; } let actionButtons = `<button onclick="adminDelEntry('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 h-8 w-8 transition-all" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`; if (e.isPayment) { actionButtons = `<button onclick="reDownloadReceipt('${adminSelectedCustId}', '${d}', ${adminShowingArchive})" class="text-blue-500 hover:text-blue-700 h-8 w-8 transition-all mr-2" title="View Receipt"><i class="fa-solid fa-file-invoice-dollar"></i></button>` + actionButtons; } tbodyHtml += `<tr class="${rowClass}"><td class="px-5 py-3 font-medium ${textClass}">${e.isPayment || e.isOrder ? e.displayDate : d}</td><td class="px-5 py-3 ${detailClass}">${detailText}</td><td class="px-5 py-3 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td><td class="px-5 py-3 text-right whitespace-nowrap" data-html2canvas-ignore>${actionButtons}</td></tr>`; }); container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50">${tbodyHtml}</tbody></table>`; } updateAdminFooter(totalMilk, totalBill, totalJama); }
+        function renderAdminPageTable() { let tbody = document.getElementById('adminEntriesTableBody'); let container = tbody ? tbody.closest('.overflow-x-auto') : document.getElementById('adminDataContainerWrapper'); if (!container) return; const cData = customersData[adminSelectedCustId]; if (!cData) return; const target = adminShowingArchive ? cData.archives : cData.entries; const filterVal = document.getElementById('adminDataFilter').value; let totalMilk = 0, totalBill = 0, totalJama = 0; if (!target) { container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50"><tr><td colspan="4" class="text-center py-6 text-slate-400">No records found.</td></tr></tbody></table>`; updateAdminFooter(0, 0, 0); return; } let displayData = Object.entries(target).sort((a,b) => b[0].localeCompare(a[0])); if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0); if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0); if(displayData.length === 0) { container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50"><tr><td colspan="4" class="text-center py-6 text-slate-400">No records.</td></tr></tbody></table>`; updateAdminFooter(0, 0, 0); return; } displayData.forEach(([d, e]) => { if(e.isPayment || e.total < 0) { totalJama += Math.abs(e.total); } else { totalMilk += e.quantity || 0; totalBill += e.total; } }); if(adminShowingArchive) { let grouped = {}; displayData.forEach(([d, e]) => { let monthKey = getEntryMonth(d, e); if(!grouped[monthKey]) grouped[monthKey] = []; grouped[monthKey].push([d, e]); }); let cardsHTML = `<div class="p-4 grid grid-cols-1 gap-4 w-full" id="adminEntriesTableBody">`; let sortedMonths = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); for(let month of sortedMonths) { let mMilk = 0, mBill = 0, mJama = 0; let monthDate = new Date(month + "-01"); let monthName = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }); grouped[month].forEach(([d, e]) => { if(e.isPayment || e.total < 0) mJama += Math.abs(e.total); else { mMilk += e.quantity || 0; mBill += e.total; } }); let netBal = Number((mBill - mJama).toFixed(2)); let balText = ""; let balClass = ""; if(netBal > 0) { balText = `Due: ₹${netBal.toFixed(2)}`; balClass = "text-rose-500 bg-rose-50 border border-rose-100"; } else if(netBal < 0) { balText = `Adv: ₹${Math.abs(netBal).toFixed(2)}`; balClass = "text-emerald-500 bg-emerald-50 border border-emerald-100"; } else { balText = `Cleared`; balClass = "text-emerald-600 bg-emerald-50 border border-emerald-100"; } cardsHTML += `<div onclick="openMonthDetailModal('${month}')" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 cursor-pointer active:scale-[0.98] transition-all flex justify-between items-center hover:border-blue-300 hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-sm"><i class="fa-regular fa-calendar-days"></i></div><div><h4 class="font-bold text-slate-800 text-[15px] tracking-wide mb-0.5">${monthName}</h4><p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">${Number(mMilk.toFixed(2))} L Total Milk</p></div></div><div class="flex items-center gap-3"><span class="inline-block px-3 py-1.5 rounded-lg text-xs font-black tracking-wide ${balClass}">${balText}</span><div class="text-slate-300 bg-slate-50 w-6 h-6 rounded-full flex items-center justify-center"><i class="fa-solid fa-chevron-right text-[10px]"></i></div></div></div>`; } cardsHTML += `</div>`; container.innerHTML = cardsHTML; } else { let tbodyHtml = ''; displayData.forEach(([d, e]) => { let rowClass = 'hover:bg-slate-50'; let textClass = 'text-slate-700'; let detailText = Number((e.quantity || 0).toFixed(2)) + ' L'; let detailClass = 'text-slate-600'; let amountClass = 'text-slate-800'; if (e.isPayment) { rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700'; detailText = 'Payment Received'; detailClass = 'text-emerald-600 font-bold'; amountClass = 'text-emerald-600'; } else if (e.isOrder) { rowClass = 'hover:bg-slate-50'; detailText = e.itemDetail || 'Order'; detailClass = 'text-blue-600 font-bold'; amountClass = 'text-slate-800'; } else if (e.quantity === 0) { rowClass = 'bg-rose-50/50'; textClass = 'text-rose-700'; detailText = '0 L (Paused)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600'; } let actionButtons = `<button onclick="adminDelEntry('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 h-8 w-8 transition-all" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`; if (e.isPayment) { actionButtons = `<button onclick="reDownloadReceipt('${adminSelectedCustId}', '${d}', ${adminShowingArchive})" class="text-blue-500 hover:text-blue-700 h-8 w-8 transition-all mr-2" title="View Receipt"><i class="fa-solid fa-file-invoice-dollar"></i></button>` + actionButtons; } tbodyHtml += `<tr class="${rowClass}"><td class="px-5 py-3 font-medium ${textClass}">${e.isPayment || e.isOrder ? e.displayDate : d}</td><td class="px-5 py-3 ${detailClass}">${detailText}</td><td class="px-5 py-3 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td><td class="px-5 py-3 text-right whitespace-nowrap" data-html2canvas-ignore>${actionButtons}</td></tr>`; }); container.innerHTML = `<table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10"><tr><th class="px-5 py-3 font-bold">Date</th><th class="px-5 py-3 font-bold">Details</th><th class="px-5 py-3 font-bold">Amt</th><th class="px-5 py-3 font-bold text-right" data-html2canvas-ignore>Act</th></tr></thead><tbody id="adminEntriesTableBody" class="divide-y divide-slate-50">${tbodyHtml}</tbody></table>`; } updateAdminFooter(totalMilk, totalBill, totalJama); }
 
-        function updateAdminFooter(milk, bill, jama) { document.getElementById('adminTotalMilk').innerText = `${Number(milk.toFixed(2))} L`; document.getElementById('adminTotalBill').innerText = `₹${bill.toFixed(2)}`; document.getElementById('adminTotalJama').innerText = `₹${jama.toFixed(2)}`; let finalAmount = bill - jama; let finalLabel = document.getElementById('adminFinalAmountLabel'); let finalDisplay = document.getElementById('adminFinalAmount'); if (finalAmount > 0) { finalLabel.innerText = "Final Due"; finalDisplay.innerText = `₹${finalAmount.toFixed(2)}`; finalDisplay.className = "font-black text-2xl text-rose-500"; } else if (finalAmount < 0) { finalLabel.innerText = "Advance"; finalDisplay.innerText = `₹${Math.abs(finalAmount).toFixed(2)}`; finalDisplay.className = "font-black text-2xl text-emerald-500"; } else { finalLabel.innerText = "Cleared"; finalDisplay.innerText = `₹0.00`; finalDisplay.className = "font-black text-2xl text-slate-800"; } }
+        function updateAdminFooter(milk, bill, jama) { document.getElementById('adminTotalMilk').innerText = `${Number(milk.toFixed(2))} L`; document.getElementById('adminTotalBill').innerText = `₹${bill.toFixed(2)}`; document.getElementById('adminTotalJama').innerText = `₹${jama.toFixed(2)}`; let finalAmount = Number((bill - jama).toFixed(2)); let finalLabel = document.getElementById('adminFinalAmountLabel'); let finalDisplay = document.getElementById('adminFinalAmount'); if (finalAmount > 0) { finalLabel.innerText = "Final Due"; finalDisplay.innerText = `₹${finalAmount.toFixed(2)}`; finalDisplay.className = "font-black text-2xl text-rose-500"; } else if (finalAmount < 0) { finalLabel.innerText = "Advance"; finalDisplay.innerText = `₹${Math.abs(finalAmount).toFixed(2)}`; finalDisplay.className = "font-black text-2xl text-emerald-500"; } else { finalLabel.innerText = "Cleared"; finalDisplay.innerText = `₹0.00`; finalDisplay.className = "font-black text-2xl text-emerald-600"; } }
 
         function openMonthDetailModal(monthKey) { document.body.style.overflow = 'hidden'; currentViewingMonth = monthKey; renderMonthDetailModal(); const m = document.getElementById('monthDetailModal'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0', 'translate-y-full'); }, 10); history.pushState({ modal: 'monthDetailModal' }, '', '#monthDetail'); }
         function closeMonthDetailModal() { document.body.style.overflow = ''; currentViewingMonth = null; const m = document.getElementById('monthDetailModal'); m.classList.add('opacity-0', 'translate-y-full'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
         
-        function renderMonthDetailModal() { if(!currentViewingMonth || !adminSelectedCustId) return; const cData = customersData[adminSelectedCustId]; const target = adminShowingArchive ? cData.archives : cData.entries; if(!target) return; let monthDate = new Date(currentViewingMonth + "-01"); let monthName = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }); document.getElementById('monthDetailModalTitle').innerText = monthName; let tbody = document.getElementById('monthDetailTableBody'); tbody.innerHTML = ''; let mMilk = 0, mBill = 0, mJama = 0; let displayData = Object.entries(target).filter(([d, e]) => d.startsWith(currentViewingMonth)).sort((a,b) => b[0].localeCompare(a[0])); const filterVal = document.getElementById('adminDataFilter').value; if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0); if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0); if(displayData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No records found.</td></tr>`; } else { displayData.forEach(([d, e]) => { if(e.isPayment || e.total < 0) mJama += Math.abs(e.total); else { mMilk += e.quantity || 0; mBill += e.total; } let rowClass = 'hover:bg-slate-50'; let textClass = 'text-slate-700'; let detailText = Number((e.quantity || 0).toFixed(2)) + ' L'; let detailClass = 'text-slate-600'; let amountClass = 'text-slate-800'; if (e.isPayment) { rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700'; detailText = 'Payment Received'; detailClass = 'text-emerald-600 font-bold'; amountClass = 'text-emerald-600'; } else if (e.isOrder) { rowClass = 'hover:bg-slate-50'; detailText = e.itemDetail || 'Order'; detailClass = 'text-blue-600 font-bold'; amountClass = 'text-slate-800'; } else if (e.quantity === 0) { rowClass = 'bg-rose-50/50'; textClass = 'text-rose-700'; detailText = '0 L (Paused)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600'; } let actionButtons = `<button onclick="adminDelEntryFromModal('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 h-8 w-8 transition-all" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`; if (e.isPayment) { actionButtons = `<button onclick="reDownloadReceipt('${adminSelectedCustId}', '${d}', ${adminShowingArchive})" class="text-blue-500 hover:text-blue-700 h-8 w-8 transition-all mr-2" title="View Receipt"><i class="fa-solid fa-file-invoice-dollar"></i></button>` + actionButtons; } tbody.innerHTML += `<tr class="${rowClass}"><td class="px-5 py-3 font-medium ${textClass}">${e.isPayment || e.isOrder ? e.displayDate : d}</td><td class="px-5 py-3 ${detailClass}">${detailText}</td><td class="px-5 py-3 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td><td class="px-5 py-3 text-right whitespace-nowrap">${actionButtons}</td></tr>`; }); } document.getElementById('monthDetailMilk').innerText = `${Number(mMilk.toFixed(2))} L`; document.getElementById('monthDetailBill').innerText = `₹${mBill.toFixed(2)}`; document.getElementById('monthDetailPaid').innerText = `₹${mJama.toFixed(2)}`; }
+        function renderMonthDetailModal() { if(!currentViewingMonth || !adminSelectedCustId) return; const cData = customersData[adminSelectedCustId]; const target = adminShowingArchive ? cData.archives : cData.entries; if(!target) return; let monthDate = new Date(currentViewingMonth + "-01"); let monthName = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }); document.getElementById('monthDetailModalTitle').innerText = monthName; let tbody = document.getElementById('monthDetailTableBody'); tbody.innerHTML = ''; let mMilk = 0, mBill = 0, mJama = 0; let displayData = Object.entries(target).filter(([d, e]) => getEntryMonth(d, e) === currentViewingMonth).sort((a,b) => b[0].localeCompare(a[0])); const filterVal = document.getElementById('adminDataFilter').value; if (filterVal === 'payments') displayData = displayData.filter(e => e[1].isPayment || e[1].total < 0); if (filterVal === 'milk') displayData = displayData.filter(e => !e[1].isPayment && e[1].total >= 0); if(displayData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No records found.</td></tr>`; } else { displayData.forEach(([d, e]) => { if(e.isPayment || e.total < 0) mJama += Math.abs(e.total); else { mMilk += e.quantity || 0; mBill += e.total; } let rowClass = 'hover:bg-slate-50'; let textClass = 'text-slate-700'; let detailText = Number((e.quantity || 0).toFixed(2)) + ' L'; let detailClass = 'text-slate-600'; let amountClass = 'text-slate-800'; if (e.isPayment) { rowClass = 'bg-emerald-50/50'; textClass = 'text-emerald-700'; detailText = 'Payment Received'; detailClass = 'text-emerald-600 font-bold'; amountClass = 'text-emerald-600'; } else if (e.isOrder) { rowClass = 'hover:bg-slate-50'; detailText = e.itemDetail || 'Order'; detailClass = 'text-blue-600 font-bold'; amountClass = 'text-slate-800'; } else if (e.quantity === 0) { rowClass = 'bg-rose-50/50'; textClass = 'text-rose-700'; detailText = '0 L (Paused)'; detailClass = 'text-rose-600 font-bold'; amountClass = 'text-rose-600'; } let actionButtons = `<button onclick="adminDelEntryFromModal('${adminSelectedCustId}','${d}')" class="text-rose-400 hover:text-rose-600 h-8 w-8 transition-all" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`; if (e.isPayment) { actionButtons = `<button onclick="reDownloadReceipt('${adminSelectedCustId}', '${d}', ${adminShowingArchive})" class="text-blue-500 hover:text-blue-700 h-8 w-8 transition-all mr-2" title="View Receipt"><i class="fa-solid fa-file-invoice-dollar"></i></button>` + actionButtons; } tbody.innerHTML += `<tr class="${rowClass}"><td class="px-5 py-3 font-medium ${textClass}">${e.isPayment || e.isOrder ? e.displayDate : d}</td><td class="px-5 py-3 ${detailClass}">${detailText}</td><td class="px-5 py-3 font-bold ${amountClass}">₹${Math.abs(e.total).toFixed(2)}</td><td class="px-5 py-3 text-right whitespace-nowrap">${actionButtons}</td></tr>`; }); } document.getElementById('monthDetailMilk').innerText = `${Number(mMilk.toFixed(2))} L`; document.getElementById('monthDetailBill').innerText = `₹${mBill.toFixed(2)}`; document.getElementById('monthDetailPaid').innerText = `₹${mJama.toFixed(2)}`; }
         async function adminDelEntryFromModal(id, d) { if(await CustomDialog.confirm("Delete", "Delete this record?")) { await db.ref(`/customers/${id}/${adminShowingArchive?'archives':'entries'}/${d}`).remove(); } }
         
         function openAdminOrdersModal() { const m = document.getElementById('adminOrdersModal'); renderAdminOrdersTable(); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); } function closeAdminOrdersModal() { const m = document.getElementById('adminOrdersModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
@@ -565,26 +740,139 @@
         function closeQRPaymentModal() { const m = document.getElementById('qrPaymentModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
 
         function openDirectQRPayment() {
-            if(!adminSelectedCustId) return; const c = customersData[adminSelectedCustId]; let bal = getDetailedBalance(c); let amt = bal.netBalance; if(amt <= 0) return CustomDialog.alert("Info", "No outstanding due.");
+            if(!adminSelectedCustId) return; const c = customersData[adminSelectedCustId];
+            const target = adminShowingArchive ? c.archives : c.entries;
+            let tabBill = 0, tabPaid = 0;
+            if (target) {
+                Object.values(target).forEach(e => {
+                    if (e.isPayment || e.total < 0) tabPaid += Math.abs(e.total);
+                    else tabBill += (e.total || 0);
+                });
+            }
+            let tabDue = Number((tabBill - tabPaid).toFixed(2));
+            let bal = getDetailedBalance(c);
+            let amt = tabDue > 0 ? tabDue : Number(bal.netBalance.toFixed(2));
+            if(amt <= 0) return CustomDialog.alert("Info", "No outstanding due.");
             directQRAmount = Number(amt.toFixed(2)); resetQRSlider(); document.getElementById('qrTransactionId').value = ''; const upiId = "9508231565-5@ybl"; const upiUrl = `upi://pay?pa=${upiId}&pn=Radha%20Dairy&am=${directQRAmount}&cu=INR`; const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}&margin=10`; document.getElementById('qrPaymentAmountDisplay').innerText = `₹${directQRAmount}`; document.getElementById('qrCodeContainer').innerHTML = `<img src="${qrCodeApiUrl}" alt="Scan to pay" class="w-48 h-48 rounded-lg">`;
-            const confirmBtn = document.getElementById('qrConfirmBtn'); confirmBtn.onclick = async () => { let forMonthVal = today.substring(0,7); let userTxnId = document.getElementById('qrTransactionId').value.trim(); let txnId = userTxnId ? userTxnId : generatePaymentId('UPI'); await db.ref(`/customers/${adminSelectedCustId}/entries/${today}_PAYMENT_DIRECT_${new Date().getTime()}`).set({ quantity: 0, rate: 0, total: directQRAmount, isPayment: true, displayDate: today, forMonth: forMonthVal, transactionId: txnId }); let wantReceipt = await CustomDialog.confirm("Success", `₹${directQRAmount} QR Payment Received! View Receipt?`); if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, directQRAmount, "UPI / QR", txnId); } closeQRPaymentModal(); directQRAmount = 0; switchAdminView('current'); };
+            const confirmBtn = document.getElementById('qrConfirmBtn'); confirmBtn.onclick = async () => { let forMonthVal = currentViewingMonth || today.substring(0,7); let userTxnId = document.getElementById('qrTransactionId').value.trim(); let txnId = userTxnId ? userTxnId : generatePaymentId('UPI'); let targetNode = await recordPaymentForCustomer(adminSelectedCustId, directQRAmount, forMonthVal, txnId); let wantReceipt = await CustomDialog.confirm("Success", `₹${directQRAmount} QR Payment Received! View Receipt?`); if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, directQRAmount, "UPI / QR", txnId); } closeQRPaymentModal(); directQRAmount = 0; switchAdminView(targetNode === 'archives' ? 'archive' : 'current'); };
             const m = document.getElementById('qrPaymentModal'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
         }
 
         function updatePaymentAmountForMonth() {
-            if(!adminSelectedCustId) return; const c = customersData[adminSelectedCustId]; if(!c) return; const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value; const currentYear = new Date().getFullYear(); const prefix = `${currentYear}-${selectedMonthStr}`; let previousBill = 0, previousPaid = 0; let selectedMonthBill = 0, selectedMonthPaid = 0;
-            const processRecords = (records) => { if(!records) return; for(let dateKey in records) { let recordMonth = dateKey.substring(0, 7); let e = records[dateKey]; if (recordMonth < prefix) { if(e.isPayment || e.total < 0) previousPaid += Math.abs(e.total); else previousBill += e.total; } else if (recordMonth === prefix) { if(e.isPayment || e.total < 0) selectedMonthPaid += Math.abs(e.total); else selectedMonthBill += e.total; } } };
+            if(!adminSelectedCustId) return; const c = customersData[adminSelectedCustId]; if(!c) return;
+            const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value;
+            const prefix = getTargetYearMonth(c, selectedMonthStr);
+            let previousBill = 0, previousPaid = 0;
+            let selectedMonthBill = 0, selectedMonthPaid = 0;
+            const processRecords = (records) => {
+                if(!records) return;
+                for(let dateKey in records) {
+                    let e = records[dateKey];
+                    let recordMonth = getEntryMonth(dateKey, e);
+                    if (recordMonth < prefix) {
+                        if(e.isPayment || e.total < 0) previousPaid += Math.abs(e.total);
+                        else previousBill += (e.total || 0);
+                    } else if (recordMonth === prefix) {
+                        if(e.isPayment || e.total < 0) selectedMonthPaid += Math.abs(e.total);
+                        else selectedMonthBill += (e.total || 0);
+                    }
+                }
+            };
             processRecords(c.entries); processRecords(c.archives);
-            let pichlaBaki = previousBill - previousPaid; let isMahineKaBill = selectedMonthBill; let totalDue = pichlaBaki + isMahineKaBill - selectedMonthPaid; let isMahineKaJama = selectedMonthPaid;
-            if (pichlaBaki > 0) { if (isMahineKaJama >= pichlaBaki) { isMahineKaJama -= pichlaBaki; pichlaBaki = 0; } else { pichlaBaki -= isMahineKaJama; isMahineKaJama = 0; } }
-            document.getElementById('adminLastDueDisplay').innerText = pichlaBaki > 0 ? `₹${pichlaBaki.toFixed(2)}` : (pichlaBaki < 0 ? `Adv: ₹${Math.abs(pichlaBaki).toFixed(2)}` : '₹0'); document.getElementById('adminTotalDueDisplay').innerText = `₹${isMahineKaBill.toFixed(2)}`; document.getElementById('adminPartialAmount').value = totalDue > 0 ? Number(totalDue.toFixed(2)) : '';
+            let pichlaBaki = Number((previousBill - previousPaid).toFixed(2));
+            let isMahineKaBill = Number(selectedMonthBill.toFixed(2));
+            let isMahineKaJama = Number(selectedMonthPaid.toFixed(2));
+
+            // Apply payments made for the selected month to that same month's bill first
+            if (isMahineKaJama >= isMahineKaBill) {
+                let extraPaid = Number((isMahineKaJama - isMahineKaBill).toFixed(2));
+                isMahineKaBill = 0;
+                pichlaBaki = Number((pichlaBaki - extraPaid).toFixed(2));
+            } else {
+                isMahineKaBill = Number((isMahineKaBill - isMahineKaJama).toFixed(2));
+            }
+
+            // If customer had an advance from previous months, apply it to this month's remaining bill
+            if (pichlaBaki < 0 && isMahineKaBill > 0) {
+                let adv = Math.abs(pichlaBaki);
+                if (adv >= isMahineKaBill) {
+                    pichlaBaki = -Number((adv - isMahineKaBill).toFixed(2));
+                    isMahineKaBill = 0;
+                } else {
+                    isMahineKaBill = Number((isMahineKaBill - adv).toFixed(2));
+                    pichlaBaki = 0;
+                }
+            }
+
+            document.getElementById('adminLastDueDisplay').innerText = pichlaBaki > 0 ? `₹${pichlaBaki.toFixed(2)}` : (pichlaBaki < 0 ? `Adv: ₹${Math.abs(pichlaBaki).toFixed(2)}` : '₹0');
+            document.getElementById('adminTotalDueDisplay').innerText = `₹${isMahineKaBill.toFixed(2)}`;
+            let defaultPayAmt = isMahineKaBill > 0 ? isMahineKaBill : (pichlaBaki > 0 ? pichlaBaki : 0);
+            document.getElementById('adminPartialAmount').value = defaultPayAmt > 0 ? Number(defaultPayAmt.toFixed(2)) : '';
         }
 
-        function openAdminPaymentModal() { const m = document.getElementById('adminPaymentModal'); const currentMonth = new Date().getMonth() + 1; document.getElementById('adminPaymentMonthSelect').value = currentMonth.toString().padStart(2, '0'); updatePaymentAmountForMonth(); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); } function closeAdminPaymentModal() { const m = document.getElementById('adminPaymentModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
+        function openAdminPaymentModal() {
+            const m = document.getElementById('adminPaymentModal');
+            let defaultMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+            if (currentViewingMonth && currentViewingMonth.includes('-')) {
+                defaultMonth = currentViewingMonth.split('-')[1];
+            }
+            document.getElementById('adminPaymentMonthSelect').value = defaultMonth;
+            updatePaymentAmountForMonth();
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
+        }
+        function closeAdminPaymentModal() { const m = document.getElementById('adminPaymentModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
         
-        async function adminAddPartialPaymentCash() { const amt = parseFloat(document.getElementById('adminPartialAmount').value); const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value; const forMonthVal = `${new Date().getFullYear()}-${selectedMonthStr}`; if(amt > 0) { let targetNode = 'entries'; const c = customersData[adminSelectedCustId]; let isArchived = false; if(c && c.archives) { for(let key in c.archives) { if(key.startsWith(forMonthVal)) { isArchived = true; break; } } } if (isArchived) targetNode = 'archives'; let txnId = generatePaymentId('CASH'); await db.ref(`/customers/${adminSelectedCustId}/${targetNode}/${today}_PAYMENT_${new Date().getTime()}`).set({ quantity: 0, rate: 0, total: amt, isPayment: true, displayDate: today, forMonth: forMonthVal, transactionId: txnId }); let wantReceipt = await CustomDialog.confirm("Payment Received", `₹${amt} Cash received successfully. View Receipt?`); if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, amt, "Cash", txnId); } document.getElementById('adminPartialAmount').value = ''; closeAdminPaymentModal(); switchAdminView(targetNode === 'archives' ? 'archive' : 'current'); } else { CustomDialog.alert("Error", "Amount is invalid."); } }
+        async function adminAddPartialPaymentCash() {
+            const amt = parseFloat(document.getElementById('adminPartialAmount').value);
+            const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value;
+            const c = customersData[adminSelectedCustId];
+            const forMonthVal = getTargetYearMonth(c, selectedMonthStr);
+            if(amt > 0) {
+                let txnId = generatePaymentId('CASH');
+                let targetNode = await recordPaymentForCustomer(adminSelectedCustId, amt, forMonthVal, txnId);
+                let wantReceipt = await CustomDialog.confirm("Payment Received", `₹${amt} Cash received successfully. View Receipt?`);
+                if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, amt, "Cash", txnId); }
+                document.getElementById('adminPartialAmount').value = '';
+                closeAdminPaymentModal();
+                switchAdminView(targetNode === 'archives' ? 'archive' : 'current');
+            } else {
+                CustomDialog.alert("Error", "Amount is invalid.");
+            }
+        }
         
-        function adminAddPartialPaymentQR() { const amt = parseFloat(document.getElementById('adminPartialAmount').value); const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value; const forMonthVal = `${new Date().getFullYear()}-${selectedMonthStr}`; if(amt > 0) { closeAdminPaymentModal(); resetQRSlider(); document.getElementById('qrTransactionId').value = ''; const upiId = "9508231565-5@ybl"; const upiUrl = `upi://pay?pa=${upiId}&pn=Radha%20Dairy&am=${amt.toFixed(2)}&cu=INR`; const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}&margin=10`; document.getElementById('qrPaymentAmountDisplay').innerText = `₹${amt.toFixed(2)}`; document.getElementById('qrCodeContainer').innerHTML = `<img src="${qrCodeApiUrl}" alt="Scan to pay" class="w-48 h-48 rounded-lg">`; const confirmBtn = document.getElementById('qrConfirmBtn'); confirmBtn.onclick = async () => { closeQRPaymentModal(); let userTxnId = document.getElementById('qrTransactionId').value.trim(); let txnId = userTxnId ? userTxnId : generatePaymentId('UPI'); let targetNode = 'entries'; const c = customersData[adminSelectedCustId]; let isArchived = false; if(c && c.archives) { for(let key in c.archives) { if(key.startsWith(forMonthVal)) { isArchived = true; break; } } } if (isArchived) targetNode = 'archives'; await db.ref(`/customers/${adminSelectedCustId}/${targetNode}/${today}_PAYMENT_${new Date().getTime()}`).set({ quantity: 0, rate: 0, total: amt, isPayment: true, displayDate: today, forMonth: forMonthVal, transactionId: txnId }); let wantReceipt = await CustomDialog.confirm("Success", `₹${amt} QR payment received. View Receipt?`); if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, amt, "UPI / QR", txnId); } document.getElementById('adminPartialAmount').value = ''; switchAdminView(targetNode === 'archives' ? 'archive' : 'current'); }; const m = document.getElementById('qrPaymentModal'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); } else { CustomDialog.alert("Error", "Amount is invalid."); } }
+        function adminAddPartialPaymentQR() {
+            const amt = parseFloat(document.getElementById('adminPartialAmount').value);
+            const selectedMonthStr = document.getElementById('adminPaymentMonthSelect').value;
+            const c = customersData[adminSelectedCustId];
+            const forMonthVal = getTargetYearMonth(c, selectedMonthStr);
+            if(amt > 0) {
+                closeAdminPaymentModal();
+                resetQRSlider();
+                document.getElementById('qrTransactionId').value = '';
+                const upiId = "9508231565-5@ybl";
+                const upiUrl = `upi://pay?pa=${upiId}&pn=Radha%20Dairy&am=${amt.toFixed(2)}&cu=INR`;
+                const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}&margin=10`;
+                document.getElementById('qrPaymentAmountDisplay').innerText = `₹${amt.toFixed(2)}`;
+                document.getElementById('qrCodeContainer').innerHTML = `<img src="${qrCodeApiUrl}" alt="Scan to pay" class="w-48 h-48 rounded-lg">`;
+                const confirmBtn = document.getElementById('qrConfirmBtn');
+                confirmBtn.onclick = async () => {
+                    closeQRPaymentModal();
+                    let userTxnId = document.getElementById('qrTransactionId').value.trim();
+                    let txnId = userTxnId ? userTxnId : generatePaymentId('UPI');
+                    let targetNode = await recordPaymentForCustomer(adminSelectedCustId, amt, forMonthVal, txnId);
+                    let wantReceipt = await CustomDialog.confirm("Success", `₹${amt} QR payment received. View Receipt?`);
+                    if (wantReceipt) { downloadReceiptPDF(adminSelectedCustId, amt, "UPI / QR", txnId); }
+                    document.getElementById('adminPartialAmount').value = '';
+                    switchAdminView(targetNode === 'archives' ? 'archive' : 'current');
+                };
+                const m = document.getElementById('qrPaymentModal');
+                m.classList.remove('hidden');
+                setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
+            } else {
+                CustomDialog.alert("Error", "Amount is invalid.");
+            }
+        }
 
         function openAdminManualEntryModal() { const m = document.getElementById('adminManualEntryModal'); document.getElementById('adminManualDate').value = today; fetchExistingEntryForDate(); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10); } function closeAdminManualEntryModal() { const m = document.getElementById('adminManualEntryModal'); m.classList.add('opacity-0'); m.children[0].classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); }
         async function adminSaveManualEntry() { const d = document.getElementById('adminManualDate').value; const q = parseFloat(document.getElementById('adminManualMilk').value); const r = parseFloat(document.getElementById('adminManualRate').value); if(d && !isNaN(q) && !isNaN(r)) { await db.ref(`/customers/${adminSelectedCustId}/${adminShowingArchive?'archives':'entries'}/${d}`).set({ quantity: q, rate: r, total: q * r }); CustomDialog.alert("Success", "Record updated."); document.getElementById('adminManualMilk').value = ''; closeAdminManualEntryModal(); } else { CustomDialog.alert("Error", "Required fields missing."); } }
